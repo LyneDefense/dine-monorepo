@@ -112,9 +112,10 @@ createdb dine_db
 Standard layered architecture: Controller → Service → Mapper → Entity
 
 **Key business modules:**
-- Restaurant & Settings (operating hours, parking, tax)
+- Restaurant & Settings (tax, parking - common settings)
+- OrderTypeConfig (per order type settings: DINE_IN, TAKEOUT)
 - Menu (categories, items, variants, modifiers, combos)
-- Dining (sections, tables)
+- Dining (sections, tables, availability check)
 - Orders (dine-in, takeout with status workflow)
 - AI Phone Settings (FAQ, instructions, active hours, escalation rules)
 - Account (SUPER_ADMIN, ADMIN, STAFF roles)
@@ -126,6 +127,18 @@ Standard layered architecture: Controller → Service → Mapper → Entity
 - STAFF: Employee, read-only access (view menu, process orders)
 - `@RestaurantAccess` annotation + AOP aspect for tenant isolation
 - `SecurityContextUtils` for permission checking in code
+
+**Order Type Configuration (OrderTypeConfig):**
+Each order type (DINE_IN, TAKEOUT) has its own configuration:
+- Common: enabled, minOrderAmount, autoConfirmEnabled, cancellation policy
+- DINE_IN specific: reservation settings, dining duration (default 120min), table merging policy
+- TAKEOUT specific: prep time, scheduled pickup, notifications
+
+**Dining Table System:**
+- Table status: AVAILABLE, RESERVED, OCCUPIED, MAINTENANCE
+- Availability check API: `GET /dining/tables/availability?date=&time=&partySize=`
+- Checks conflicts based on configured dining duration
+- Table merging is a restaurant-level setting (not per-table)
 
 **Notable patterns:**
 - Snowflake ID generation (no auto-increment)
