@@ -6,6 +6,8 @@ import com.dine.backend.converter.EntityConverter;
 import com.dine.backend.dto.request.RestaurantSettingsRequest;
 import com.dine.backend.dto.response.RestaurantSettingsVO;
 import com.dine.backend.entity.RestaurantSettings;
+import com.dine.backend.entity.enums.ParkingFeeTypeEnum;
+import com.dine.backend.entity.enums.ParkingTypeEnum;
 import com.dine.backend.exception.BusinessException;
 import com.dine.backend.mapper.RestaurantSettingsMapper;
 import com.dine.backend.service.RestaurantSettingsService;
@@ -43,29 +45,24 @@ public class RestaurantSettingsServiceImpl extends ServiceImpl<RestaurantSetting
             throw BusinessException.notFound("Restaurant settings not found");
         }
 
-        // Update fields if provided
-        if (request.getAcceptedOrderTypes() != null) settings.setAcceptedOrderTypes(request.getAcceptedOrderTypes());
-        if (request.getLastOrderMinutesBeforeClose() != null) settings.setLastOrderMinutesBeforeClose(request.getLastOrderMinutesBeforeClose());
+        // Update tax fields if provided
         if (request.getTaxRate() != null) settings.setTaxRate(request.getTaxRate());
         if (request.getTaxName() != null) settings.setTaxName(request.getTaxName());
         if (request.getTaxInclusive() != null) settings.setTaxInclusive(request.getTaxInclusive());
-        if (request.getReservationEnabled() != null) settings.setReservationEnabled(request.getReservationEnabled());
-        if (request.getMaxAdvanceDays() != null) settings.setMaxAdvanceDays(request.getMaxAdvanceDays());
-        if (request.getMinAdvanceMinutes() != null) settings.setMinAdvanceMinutes(request.getMinAdvanceMinutes());
-        if (request.getMaxReservationsPerSlot() != null) settings.setMaxReservationsPerSlot(request.getMaxReservationsPerSlot());
-        if (request.getSectionPreferenceEnabled() != null) settings.setSectionPreferenceEnabled(request.getSectionPreferenceEnabled());
-        if (request.getPreOrderEnabled() != null) settings.setPreOrderEnabled(request.getPreOrderEnabled());
-        if (request.getPreOrderRequired() != null) settings.setPreOrderRequired(request.getPreOrderRequired());
-        if (request.getMinPrepMinutes() != null) settings.setMinPrepMinutes(request.getMinPrepMinutes());
-        if (request.getScheduledPickupEnabled() != null) settings.setScheduledPickupEnabled(request.getScheduledPickupEnabled());
-        if (request.getMaxScheduledAdvanceHours() != null) settings.setMaxScheduledAdvanceHours(request.getMaxScheduledAdvanceHours());
-        if (request.getMaxOrdersPerSlot() != null) settings.setMaxOrdersPerSlot(request.getMaxOrdersPerSlot());
-        if (request.getPickupInstructions() != null) settings.setPickupInstructions(request.getPickupInstructions());
-        if (request.getAllowCancellation() != null) settings.setAllowCancellation(request.getAllowCancellation());
-        if (request.getCancelDeadlineHours() != null) settings.setCancelDeadlineHours(request.getCancelDeadlineHours());
-        if (request.getCancelReasonRequired() != null) settings.setCancelReasonRequired(request.getCancelReasonRequired());
-        if (request.getCancelPolicyNote() != null) settings.setCancelPolicyNote(request.getCancelPolicyNote());
-        if (request.getAutoConfirmEnabled() != null) settings.setAutoConfirmEnabled(request.getAutoConfirmEnabled());
+
+        // Update parking fields if provided
+        if (request.getHasParking() != null) settings.setHasParking(request.getHasParking());
+        if (request.getParkingType() != null) {
+            settings.setParkingType(ParkingTypeEnum.valueOf(request.getParkingType()));
+        }
+        if (request.getParkingCapacity() != null) settings.setParkingCapacity(request.getParkingCapacity());
+        if (request.getParkingFeeType() != null) {
+            settings.setParkingFeeType(ParkingFeeTypeEnum.valueOf(request.getParkingFeeType()));
+        }
+        if (request.getParkingFreeWithMinSpend() != null) settings.setParkingFreeWithMinSpend(request.getParkingFreeWithMinSpend());
+        if (request.getParkingHourlyRate() != null) settings.setParkingHourlyRate(request.getParkingHourlyRate());
+        if (request.getParkingAddress() != null) settings.setParkingAddress(request.getParkingAddress());
+        if (request.getParkingNotes() != null) settings.setParkingNotes(request.getParkingNotes());
 
         updateById(settings);
         return converter.toRestaurantSettingsVO(settings);

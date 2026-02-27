@@ -41,6 +41,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private final RestaurantSettingsService settingsService;
     private final RestaurantService restaurantService;
     private final ComboService comboService;
+    private final OrderTypeConfigService orderTypeConfigService;
 
     private void validateRestaurantExists(Long restaurantId) {
         Restaurant restaurant = restaurantService.getById(restaurantId);
@@ -237,9 +238,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // Log status
         logStatusChange(order.getId(), null, OrderStatusEnum.PENDING, "Order created");
 
-        // Auto-confirm if enabled
-        if (settings != null && Boolean.TRUE.equals(settings.getAutoConfirmEnabled())) {
-            return confirmOrder(restaurantId, order.getId());
+        // Auto-confirm if enabled in order type config
+        try {
+            OrderTypeConfig orderTypeConfig = orderTypeConfigService.getOne(
+                    new LambdaQueryWrapper<OrderTypeConfig>()
+                            .eq(OrderTypeConfig::getRestaurantId, restaurantId)
+                            .eq(OrderTypeConfig::getOrderType, order.getType()));
+            if (orderTypeConfig != null && Boolean.TRUE.equals(orderTypeConfig.getAutoConfirmEnabled())) {
+                return confirmOrder(restaurantId, order.getId());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to check auto-confirm setting: {}", e.getMessage());
         }
 
         return getOrderById(restaurantId, order.getId());

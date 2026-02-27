@@ -370,4 +370,18 @@ public class EntityConverter {
         if (entities == null) return null;
         return entities.stream().map(this::toAccountVO).collect(Collectors.toList());
     }
+
+    // ==================== Order Type Config ====================
+
+    public OrderTypeConfigVO toOrderTypeConfigVO(OrderTypeConfig entity) {
+        if (entity == null) return null;
+        OrderTypeConfigVO vo = new OrderTypeConfigVO();
+        BeanUtils.copyProperties(entity, vo);
+        return vo;
+    }
+
+    public List<OrderTypeConfigVO> toOrderTypeConfigVOList(List<OrderTypeConfig> entities) {
+        if (entities == null) return null;
+        return entities.stream().map(this::toOrderTypeConfigVO).collect(Collectors.toList());
+    }
 }
