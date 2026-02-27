@@ -51,7 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/agent/**").permitAll() // AI Agent API (will use API key auth later)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Health check
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         // Swagger UI
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // All other requests need authentication
