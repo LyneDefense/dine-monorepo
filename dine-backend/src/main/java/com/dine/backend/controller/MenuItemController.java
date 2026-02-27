@@ -10,6 +10,7 @@ import com.dine.backend.dto.request.ModifierGroupRequest;
 import com.dine.backend.dto.response.MenuItemVO;
 import com.dine.backend.dto.response.MenuItemVariantVO;
 import com.dine.backend.dto.response.ModifierGroupVO;
+import com.dine.backend.security.annotation.RestaurantAccess;
 import com.dine.backend.service.MenuItemService;
 import com.dine.backend.service.MenuItemVariantService;
 import com.dine.backend.service.ModifierGroupService;
@@ -35,6 +36,7 @@ public class MenuItemController {
 
     @Operation(summary = "获取菜单项列表", description = "支持按分类、关键词筛选")
     @GetMapping
+    @RestaurantAccess(allowStaff = true)
     public Result<PageResult<MenuItemVO>> list(
             @PathVariable Long restaurantId,
             @RequestParam(required = false) Long categoryId,
@@ -47,12 +49,14 @@ public class MenuItemController {
 
     @Operation(summary = "获取菜单项详情")
     @GetMapping("/{id}")
+    @RestaurantAccess(allowStaff = true)
     public Result<MenuItemVO> getById(@PathVariable Long restaurantId, @PathVariable Long id) {
         return Result.success(menuItemService.getMenuItemById(restaurantId, id));
     }
 
     @Operation(summary = "创建菜单项")
     @PostMapping
+    @RestaurantAccess
     public Result<MenuItemVO> create(
             @PathVariable Long restaurantId,
             @Valid @RequestBody MenuItemCreateRequest request) {
@@ -61,6 +65,7 @@ public class MenuItemController {
 
     @Operation(summary = "更新菜单项")
     @PutMapping("/{id}")
+    @RestaurantAccess
     public Result<MenuItemVO> update(
             @PathVariable Long restaurantId,
             @PathVariable Long id,
@@ -70,6 +75,7 @@ public class MenuItemController {
 
     @Operation(summary = "删除菜单项")
     @DeleteMapping("/{id}")
+    @RestaurantAccess
     public Result<Void> delete(@PathVariable Long restaurantId, @PathVariable Long id) {
         menuItemService.deleteMenuItem(restaurantId, id);
         return Result.success();
@@ -77,6 +83,7 @@ public class MenuItemController {
 
     @Operation(summary = "更新菜单项可用状态")
     @PatchMapping("/{id}/availability")
+    @RestaurantAccess
     public Result<Void> updateAvailability(
             @PathVariable Long restaurantId,
             @PathVariable Long id,
@@ -89,6 +96,7 @@ public class MenuItemController {
 
     @Operation(summary = "获取菜单项规格列表")
     @GetMapping("/{itemId}/variants")
+    @RestaurantAccess(allowStaff = true)
     public Result<List<MenuItemVariantVO>> listVariants(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId) {
@@ -97,6 +105,7 @@ public class MenuItemController {
 
     @Operation(summary = "创建菜单项规格")
     @PostMapping("/{itemId}/variants")
+    @RestaurantAccess
     public Result<MenuItemVariantVO> createVariant(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId,
@@ -106,6 +115,7 @@ public class MenuItemController {
 
     @Operation(summary = "更新菜单项规格")
     @PutMapping("/{itemId}/variants/{variantId}")
+    @RestaurantAccess
     public Result<MenuItemVariantVO> updateVariant(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId,
@@ -116,6 +126,7 @@ public class MenuItemController {
 
     @Operation(summary = "删除菜单项规格")
     @DeleteMapping("/{itemId}/variants/{variantId}")
+    @RestaurantAccess
     public Result<Void> deleteVariant(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId,
@@ -128,6 +139,7 @@ public class MenuItemController {
 
     @Operation(summary = "获取加料组列表")
     @GetMapping("/{itemId}/modifier-groups")
+    @RestaurantAccess(allowStaff = true)
     public Result<List<ModifierGroupVO>> listModifierGroups(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId) {
@@ -136,6 +148,7 @@ public class MenuItemController {
 
     @Operation(summary = "创建加料组")
     @PostMapping("/{itemId}/modifier-groups")
+    @RestaurantAccess
     public Result<ModifierGroupVO> createModifierGroup(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId,
@@ -145,6 +158,7 @@ public class MenuItemController {
 
     @Operation(summary = "更新加料组")
     @PutMapping("/{itemId}/modifier-groups/{groupId}")
+    @RestaurantAccess
     public Result<ModifierGroupVO> updateModifierGroup(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId,
@@ -155,6 +169,7 @@ public class MenuItemController {
 
     @Operation(summary = "删除加料组")
     @DeleteMapping("/{itemId}/modifier-groups/{groupId}")
+    @RestaurantAccess
     public Result<Void> deleteModifierGroup(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId,
@@ -167,6 +182,7 @@ public class MenuItemController {
 
     @Operation(summary = "更新菜单项别名", description = "用于AI语音识别")
     @PutMapping("/{itemId}/aliases")
+    @RestaurantAccess
     public Result<Void> updateAliases(
             @PathVariable Long restaurantId,
             @PathVariable Long itemId,

@@ -3,6 +3,7 @@ package com.dine.backend.controller;
 import com.dine.backend.common.Result;
 import com.dine.backend.dto.request.MenuCategoryRequest;
 import com.dine.backend.dto.response.MenuCategoryVO;
+import com.dine.backend.security.annotation.RestaurantAccess;
 import com.dine.backend.service.MenuCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,18 +23,21 @@ public class MenuCategoryController {
 
     @Operation(summary = "获取分类列表")
     @GetMapping
+    @RestaurantAccess(allowStaff = true)
     public Result<List<MenuCategoryVO>> list(@PathVariable Long restaurantId) {
         return Result.success(menuCategoryService.getCategories(restaurantId));
     }
 
     @Operation(summary = "获取分类详情")
     @GetMapping("/{id}")
+    @RestaurantAccess(allowStaff = true)
     public Result<MenuCategoryVO> getById(@PathVariable Long restaurantId, @PathVariable Long id) {
         return Result.success(menuCategoryService.getCategoryById(restaurantId, id));
     }
 
     @Operation(summary = "创建分类")
     @PostMapping
+    @RestaurantAccess
     public Result<MenuCategoryVO> create(
             @PathVariable Long restaurantId,
             @Valid @RequestBody MenuCategoryRequest request) {
@@ -42,6 +46,7 @@ public class MenuCategoryController {
 
     @Operation(summary = "更新分类")
     @PutMapping("/{id}")
+    @RestaurantAccess
     public Result<MenuCategoryVO> update(
             @PathVariable Long restaurantId,
             @PathVariable Long id,
@@ -51,6 +56,7 @@ public class MenuCategoryController {
 
     @Operation(summary = "删除分类")
     @DeleteMapping("/{id}")
+    @RestaurantAccess
     public Result<Void> delete(@PathVariable Long restaurantId, @PathVariable Long id) {
         menuCategoryService.deleteCategory(restaurantId, id);
         return Result.success();
@@ -58,6 +64,7 @@ public class MenuCategoryController {
 
     @Operation(summary = "更新分类排序")
     @PutMapping("/sort")
+    @RestaurantAccess
     public Result<Void> updateSortOrder(
             @PathVariable Long restaurantId,
             @RequestBody List<Long> categoryIds) {

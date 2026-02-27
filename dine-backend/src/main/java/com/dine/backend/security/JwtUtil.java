@@ -32,7 +32,10 @@ public class JwtUtil {
 
     public String generateToken(Long accountId, Long restaurantId, String email, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("restaurantId", restaurantId);
+        // SUPER_ADMIN 的 restaurantId 为 null，不写入 JWT
+        if (restaurantId != null) {
+            claims.put("restaurantId", restaurantId);
+        }
         claims.put("email", email);
         claims.put("role", role);
         return createToken(claims, accountId.toString(), jwtProperties.getExpiration());
@@ -63,6 +66,9 @@ public class JwtUtil {
     public Long getRestaurantIdFromToken(String token) {
         Claims claims = extractAllClaims(token);
         Object restaurantId = claims.get("restaurantId");
+        if (restaurantId == null) {
+            return null; // SUPER_ADMIN 没有 restaurantId
+        }
         if (restaurantId instanceof Integer) {
             return ((Integer) restaurantId).longValue();
         }
