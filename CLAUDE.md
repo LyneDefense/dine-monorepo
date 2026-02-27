@@ -117,7 +117,15 @@ Standard layered architecture: Controller → Service → Mapper → Entity
 - Dining (sections, tables)
 - Orders (dine-in, takeout with status workflow)
 - AI Phone Settings (FAQ, instructions, active hours, escalation rules)
-- Account (SUPER_ADMIN, ADMIN roles)
+- Account (SUPER_ADMIN, ADMIN, STAFF roles)
+- Platform Admin (SUPER_ADMIN only: create restaurants with admin accounts)
+
+**Multi-tenant Permission System:**
+- SUPER_ADMIN: Platform admin, `restaurantId=NULL`, can access all restaurants
+- ADMIN: Restaurant owner/manager, can only access their own restaurant
+- STAFF: Employee, read-only access (view menu, process orders)
+- `@RestaurantAccess` annotation + AOP aspect for tenant isolation
+- `SecurityContextUtils` for permission checking in code
 
 **Notable patterns:**
 - Snowflake ID generation (no auto-increment)
