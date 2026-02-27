@@ -13,10 +13,10 @@ Twilio Phone ←→ Python Agent (STT/TTS/LLM) ←→ Java Backend (Spring Boot)
 ## Monorepo Structure
 
 - **dine-backend**: Java Spring Boot 3.2.5 API server (PostgreSQL, MyBatis Plus, JWT auth)
-- **dine-agent**: Python AI agent for voice interactions (Twilio integration) - *placeholder*
-- **dine-frontend**: Vue admin panel - *placeholder*
+- **dine-agent**: Python FastAPI AI agent for voice interactions (Twilio, OpenAI)
+- **dine-frontend**: Vue 3 + TypeScript admin panel (Vite, Pinia, Vue Router)
 - **dine-docs**: Product documentation (prd.md contains full system design)
-- **dine-deployment**: Deployment configs - *empty*
+- **dine-deployment**: Docker deployment configs
 
 ## Build & Run Commands
 
@@ -40,12 +40,70 @@ cd dine-backend
 
 Server runs on port **8989**. API docs available at `/swagger-ui.html`.
 
+### dine-frontend
+
+```bash
+cd dine-frontend
+
+# Install dependencies
+npm install
+
+# Dev server (port 5173)
+npm run dev
+
+# Build for production
+npm run build
+
+# Type check
+npm run build:check
+```
+
+Base path: `/dine/`. API proxy: `/dine/api/*` → `localhost:8989/api/*`
+
+### dine-agent
+
+```bash
+cd dine-agent
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run dev server (port 8000)
+uvicorn src.main:app --reload
+```
+
+### dine-deployment
+
+```bash
+cd dine-deployment
+
+# Initialize
+./deploy.sh init
+
+# Build all
+./deploy.sh build
+
+# Start/Stop services
+./deploy.sh start
+./deploy.sh stop
+
+# View logs
+./deploy.sh logs [service]
+
+# SSL setup
+./deploy.sh ssl-init
+./deploy.sh nginx-https
+```
+
 ### Database
 
 PostgreSQL required. Flyway handles migrations automatically on startup.
 
 ```bash
-# Create database
 createdb dine_db
 ```
 
@@ -67,6 +125,18 @@ Standard layered architecture: Controller → Service → Mapper → Entity
 - `MenuItemAlias` entity exists specifically for AI voice recognition
 - `selected_modifiers` stored as JSONB in order items
 
+## URL Routing (Production)
+
+```
+https://enceladus.online/dine/         → Frontend (SPA)
+https://enceladus.online/dine/api/*    → Backend API
+https://enceladus.online/dine/agent/*  → AI Agent API
+```
+
 ## Git Commit Convention
 
 Do not add co-author or "generated with" footer to commits.
+
+## Maintenance Notes
+
+- 如果你觉得项目有变动，在有必要的时候，需要提醒我重新审视和更新项目的CLAUDE.md文件。

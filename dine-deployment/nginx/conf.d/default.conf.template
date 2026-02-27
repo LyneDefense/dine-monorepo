@@ -1,0 +1,55 @@
+server {
+    listen 80;
+    server_name DOMAIN_PLACEHOLDER;
+
+    # Let's Encrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Gzip compression
+    gzip on;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    # Root redirect
+    location = / {
+        return 301 /dine/;
+    }
+
+    # API proxy
+    location /dine/api/ {
+        proxy_pass http://backend:8989/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Agent API proxy
+    location /dine/agent/ {
+        proxy_pass http://agent:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Static files with cache
+    location ~* ^/dine/(.*\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))$ {
+        root /usr/share/nginx/html;
+        try_files /$1 =404;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # SPA routing
+    location /dine/ {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+}
