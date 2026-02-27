@@ -73,16 +73,15 @@ server {
 
     # Static files with cache
     location ~* ^/dine/(.*\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))$ {
-        root /usr/share/nginx/html;
-        try_files /$1 =404;
+        alias /usr/share/nginx/html/$1;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
 
     # SPA routing
     location /dine/ {
-        root /usr/share/nginx/html;
+        alias /usr/share/nginx/html/;
         index index.html;
-        try_files $uri $uri/ /index.html;
+        try_files $uri $uri/ /dine/index.html;
     }
 }
