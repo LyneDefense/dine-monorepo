@@ -33,6 +33,8 @@ public class Order extends BaseEntity {
     private String customerNotes;
 
     // Dine-in fields
+    private Long tableId;
+
     private LocalDate reservationDate;
 
     private LocalTime reservationTime;

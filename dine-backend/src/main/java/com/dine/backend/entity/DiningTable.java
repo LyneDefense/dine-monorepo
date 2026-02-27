@@ -19,7 +19,5 @@ public class DiningTable extends BaseEntity {
 
     private Integer capacity;
 
-    private Boolean mergeable;
-
     private TableStatusEnum status;
 }

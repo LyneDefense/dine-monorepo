@@ -45,6 +45,9 @@ public class OrderTypeConfigVO {
     private BigDecimal reservationDepositAmount;
     private Boolean reservationDepositRequired;
     private String noShowPolicyNote;
+    private Integer defaultDiningDurationMinutes;    // 默认用餐时长（分钟）
+    private Boolean tableMergingEnabled;             // 是否允许拼桌
+    private Boolean tableMergingRequiresApproval;    // 拼桌是否需要人工审核
 
     // TAKEOUT 专属配置
     private Integer minPrepMinutes;

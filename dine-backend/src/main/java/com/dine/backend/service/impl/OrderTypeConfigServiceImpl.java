@@ -138,6 +138,9 @@ public class OrderTypeConfigServiceImpl extends ServiceImpl<OrderTypeConfigMappe
             config.setPreOrderRequired(false);
             config.setQueueEnabled(false);
             config.setReservationDepositRequired(false);
+            config.setDefaultDiningDurationMinutes(120);  // 默认2小时
+            config.setTableMergingEnabled(false);
+            config.setTableMergingRequiresApproval(true);
         } else if (orderType == OrderTypeEnum.TAKEOUT) {
             // TAKEOUT 默认值
             config.setMinPrepMinutes(20);
@@ -177,6 +180,9 @@ public class OrderTypeConfigServiceImpl extends ServiceImpl<OrderTypeConfigMappe
         if (source.getReservationDepositAmount() != null) target.setReservationDepositAmount(source.getReservationDepositAmount());
         if (source.getReservationDepositRequired() != null) target.setReservationDepositRequired(source.getReservationDepositRequired());
         if (source.getNoShowPolicyNote() != null) target.setNoShowPolicyNote(source.getNoShowPolicyNote());
+        if (source.getDefaultDiningDurationMinutes() != null) target.setDefaultDiningDurationMinutes(source.getDefaultDiningDurationMinutes());
+        if (source.getTableMergingEnabled() != null) target.setTableMergingEnabled(source.getTableMergingEnabled());
+        if (source.getTableMergingRequiresApproval() != null) target.setTableMergingRequiresApproval(source.getTableMergingRequiresApproval());
 
         // TAKEOUT 专属
         if (source.getMinPrepMinutes() != null) target.setMinPrepMinutes(source.getMinPrepMinutes());

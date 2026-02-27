@@ -5,6 +5,7 @@ import com.dine.backend.dto.request.DiningSectionRequest;
 import com.dine.backend.dto.request.DiningTableRequest;
 import com.dine.backend.dto.response.DiningSectionVO;
 import com.dine.backend.dto.response.DiningTableVO;
+import com.dine.backend.dto.response.TableAvailabilityVO;
 import com.dine.backend.entity.enums.TableStatusEnum;
 import com.dine.backend.security.annotation.RestaurantAccess;
 import com.dine.backend.service.DiningSectionService;
@@ -13,8 +14,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Tag(name = "Dining Section", description = "餐区和餐桌管理接口")
@@ -137,5 +141,18 @@ public class DiningController {
             @RequestParam TableStatusEnum status) {
         diningTableService.updateStatus(restaurantId, tableId, status);
         return Result.success();
+    }
+
+    // ==================== Table Availability ====================
+
+    @Operation(summary = "查询餐桌可用性", description = "查询指定日期时间是否有可用餐桌")
+    @GetMapping("/tables/availability")
+    @RestaurantAccess(allowStaff = true)
+    public Result<TableAvailabilityVO> checkAvailability(
+            @PathVariable Long restaurantId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime time,
+            @RequestParam Integer partySize) {
+        return Result.success(diningTableService.checkAvailability(restaurantId, date, time, partySize));
     }
 }

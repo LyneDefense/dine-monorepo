@@ -5,22 +5,24 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dine.backend.converter.EntityConverter;
 import com.dine.backend.dto.request.DiningTableRequest;
 import com.dine.backend.dto.response.DiningTableVO;
-import com.dine.backend.entity.DiningSection;
-import com.dine.backend.entity.DiningTable;
-import com.dine.backend.entity.Restaurant;
+import com.dine.backend.dto.response.TableAvailabilityVO;
+import com.dine.backend.entity.*;
+import com.dine.backend.entity.enums.OrderStatusEnum;
+import com.dine.backend.entity.enums.OrderTypeEnum;
 import com.dine.backend.entity.enums.TableStatusEnum;
 import com.dine.backend.exception.BusinessException;
 import com.dine.backend.mapper.DiningTableMapper;
-import com.dine.backend.service.DiningSectionService;
-import com.dine.backend.service.DiningTableService;
-import com.dine.backend.service.RestaurantService;
-import lombok.RequiredArgsConstructor;
+import com.dine.backend.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,14 +32,20 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
     private final EntityConverter converter;
     private final RestaurantService restaurantService;
     private final DiningSectionService diningSectionService;
+    private final OrderService orderService;
+    private final OrderTypeConfigService orderTypeConfigService;
 
     public DiningTableServiceImpl(
             EntityConverter converter,
             RestaurantService restaurantService,
-            @Lazy DiningSectionService diningSectionService) {
+            @Lazy DiningSectionService diningSectionService,
+            @Lazy OrderService orderService,
+            @Lazy OrderTypeConfigService orderTypeConfigService) {
         this.converter = converter;
         this.restaurantService = restaurantService;
         this.diningSectionService = diningSectionService;
+        this.orderService = orderService;
+        this.orderTypeConfigService = orderTypeConfigService;
     }
 
     private void validateRestaurantExists(Long restaurantId) {
@@ -127,7 +135,6 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
         table.setTableNumber(request.getName());
         table.setCapacity(request.getCapacity());
         table.setStatus(request.getStatus() != null ? request.getStatus() : TableStatusEnum.AVAILABLE);
-        table.setMergeable(true);
         save(table);
 
         log.info("Table created: id={}, number={}, sectionId={}", table.getId(), table.getTableNumber(), sectionId);
@@ -192,5 +199,79 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
     public void deleteBySectionId(Long sectionId) {
         remove(new LambdaQueryWrapper<DiningTable>()
                 .eq(DiningTable::getSectionId, sectionId));
+    }
+
+    @Override
+    public TableAvailabilityVO checkAvailability(Long restaurantId, LocalDate date, LocalTime time, Integer partySize) {
+        validateRestaurantExists(restaurantId);
+
+        // 获取用餐时长设置（默认120分钟）
+        int diningDurationMinutes = 120;
+        try {
+            OrderTypeConfig dineInConfig = orderTypeConfigService.getOne(
+                    new LambdaQueryWrapper<OrderTypeConfig>()
+                            .eq(OrderTypeConfig::getRestaurantId, restaurantId)
+                            .eq(OrderTypeConfig::getOrderType, OrderTypeEnum.DINE_IN));
+            if (dineInConfig != null && dineInConfig.getDefaultDiningDurationMinutes() != null) {
+                diningDurationMinutes = dineInConfig.getDefaultDiningDurationMinutes();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to get dining duration config, using default: {}", e.getMessage());
+        }
+
+        // 计算时间范围
+        // 如果请求时间是 18:00，用餐时长 2 小时
+        // 则冲突的预约是：预约时间在 16:00-20:00 之间的（即 18:00 前后各2小时）
+        LocalTime rangeStart = time.minusMinutes(diningDurationMinutes);
+        LocalTime rangeEnd = time.plusMinutes(diningDurationMinutes);
+
+        // 查询该时段有预约的订单，获取占用的桌子ID列表
+        List<Order> conflictingOrders = orderService.list(new LambdaQueryWrapper<Order>()
+                .eq(Order::getRestaurantId, restaurantId)
+                .eq(Order::getType, OrderTypeEnum.DINE_IN)
+                .eq(Order::getReservationDate, date)
+                .isNotNull(Order::getTableId)
+                .notIn(Order::getStatus, OrderStatusEnum.CANCELLED, OrderStatusEnum.COMPLETED)
+                .and(wrapper -> wrapper
+                        .ge(Order::getReservationTime, rangeStart)
+                        .lt(Order::getReservationTime, rangeEnd)));
+
+        Set<Long> occupiedTableIds = conflictingOrders.stream()
+                .map(Order::getTableId)
+                .collect(Collectors.toSet());
+
+        // 查询所有可用的餐桌（容量足够，状态为 AVAILABLE，且不在占用列表中）
+        LambdaQueryWrapper<DiningTable> tableWrapper = new LambdaQueryWrapper<DiningTable>()
+                .eq(DiningTable::getRestaurantId, restaurantId)
+                .ge(DiningTable::getCapacity, partySize)
+                .eq(DiningTable::getStatus, TableStatusEnum.AVAILABLE);
+
+        if (!occupiedTableIds.isEmpty()) {
+            tableWrapper.notIn(DiningTable::getId, occupiedTableIds);
+        }
+
+        List<DiningTable> availableTables = list(tableWrapper);
+
+        // 获取分区信息用于返回
+        List<DiningSection> sections = diningSectionService.list(new LambdaQueryWrapper<DiningSection>()
+                .eq(DiningSection::getRestaurantId, restaurantId));
+        var sectionMap = sections.stream()
+                .collect(Collectors.toMap(DiningSection::getId, DiningSection::getName));
+
+        // 构建响应
+        List<TableAvailabilityVO.AvailableTable> result = new ArrayList<>();
+        for (DiningTable table : availableTables) {
+            TableAvailabilityVO.AvailableTable availableTable = new TableAvailabilityVO.AvailableTable();
+            availableTable.setTableId(table.getId());
+            availableTable.setTableNumber(table.getTableNumber());
+            availableTable.setCapacity(table.getCapacity());
+            availableTable.setSectionName(sectionMap.get(table.getSectionId()));
+            result.add(availableTable);
+        }
+
+        log.info("Availability check: restaurantId={}, date={}, time={}, partySize={}, availableTables={}",
+                restaurantId, date, time, partySize, result.size());
+
+        return TableAvailabilityVO.available(result);
     }
 }
