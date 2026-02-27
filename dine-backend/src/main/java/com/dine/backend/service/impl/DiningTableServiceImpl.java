@@ -16,6 +16,7 @@ import com.dine.backend.service.DiningTableService;
 import com.dine.backend.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +25,20 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, DiningTable> implements DiningTableService {
 
     private final EntityConverter converter;
     private final RestaurantService restaurantService;
     private final DiningSectionService diningSectionService;
+
+    public DiningTableServiceImpl(
+            EntityConverter converter,
+            RestaurantService restaurantService,
+            @Lazy DiningSectionService diningSectionService) {
+        this.converter = converter;
+        this.restaurantService = restaurantService;
+        this.diningSectionService = diningSectionService;
+    }
 
     private void validateRestaurantExists(Long restaurantId) {
         Restaurant restaurant = restaurantService.getById(restaurantId);
